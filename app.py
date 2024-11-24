@@ -50,7 +50,11 @@ with main_container:
             )
 
             if st.button("送信", key=f"send_{st.session_state.conversation_count}"):
-                if user_input:
+                if not user_input:
+                    st.warning("メッセージを入力してください！")
+                elif len(user_input) > 20:
+                    st.warning("長すぎるわね。もう少し短くして入力してくんないや！")
+                else:
                     # ユーザーのメッセージを履歴に追加
                     st.session_state.chat_history.append(
                         {"role": "user", "content": user_input}
@@ -77,8 +81,6 @@ with main_container:
 
                     except Exception as e:
                         st.error(f"APIエラー: {e}")
-                else:
-                    st.warning("メッセージを入力してください！")
         else:
             st.write("しゃべった回数が10回になったわね。また、始めからやってくんないや！")
             st.stop()
