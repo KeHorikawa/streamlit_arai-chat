@@ -1,3 +1,8 @@
+.devcontainer/
 .streamlit/
-memo
+.venv/
+__pycache__/
+_memo/
+*.pyc
+.env
 .DS_Store
