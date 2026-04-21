@@ -1,12 +1,16 @@
-import os
 import sys
+import tomli as tomllib
 from pathlib import Path
-from dotenv import load_dotenv
 from openai import OpenAI
 
-load_dotenv()
-
 BASE_DIR = Path(__file__).parent.parent
+_secrets_path = BASE_DIR / ".streamlit" / "secrets.toml"
+if not _secrets_path.exists():
+    print(f"エラー: {_secrets_path} が見つかりません。")
+    sys.exit(1)
+with open(_secrets_path, "rb") as _f:
+    _secrets = tomllib.load(_f)
+
 PHRASES_FILE = BASE_DIR / "plans" / "experiment_phrases.txt"
 OLD_DICT_FILE = BASE_DIR / "dialect_dict_old.txt"
 NEW_DICT_FILE = BASE_DIR / "dialect_dict.txt"
@@ -90,9 +94,9 @@ def format_table(label, results):
 
 
 def main():
-    api_key = os.environ.get("OPENAI_API_KEY")
+    api_key = _secrets.get("OPENAI_API_KEY")
     if not api_key:
-        print("エラー: OPENAI_API_KEY が設定されていません。.env を確認してください。")
+        print("エラー: OPENAI_API_KEY が設定されていません。.streamlit/secrets.toml を確認してください。")
         sys.exit(1)
 
     client = OpenAI(api_key=api_key)
