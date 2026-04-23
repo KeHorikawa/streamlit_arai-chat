@@ -75,22 +75,26 @@ def run_experiment(client, phrases, dict_content, label):
 
 def format_table(label, results):
     lines = [f"## {label}", ""]
-    lines.append("| # | 標準語 | 翻訳結果 | 入力Token | 出力Token | 合計Token |")
-    lines.append("|---|--------|----------|-----------|-----------|-----------|")
-    total_input = total_output = total = 0
+    lines.append("| # | 標準語 | 翻訳結果 | 入力Token | キャッシュToken | キャッシュ率 | 出力Token | 合計Token |")
+    lines.append("|---|--------|----------|-----------|----------------|------------|-----------|-----------|")
+    total_input = total_output = total = total_cached = 0
     for i, r in enumerate(results, 1):
+        cache_rate = r["cached_tokens"] / r["input_tokens"] * 100 if r["input_tokens"] else 0
         lines.append(
             f"| {i} | {r['phrase']} | {r['translation']} "
-            f"| {r['input_tokens']} | {r['output_tokens']} | {r['total_tokens']} |"
+            f"| {r['input_tokens']} | {r['cached_tokens']} | {cache_rate:.1f}% "
+            f"| {r['output_tokens']} | {r['total_tokens']} |"
         )
         total_input += r["input_tokens"]
         total_output += r["output_tokens"]
         total += r["total_tokens"]
+        total_cached += r["cached_tokens"]
+    overall_rate = total_cached / total_input * 100 if total_input else 0
     lines.append(
-        f"| **合計** | | | {total_input:,} | {total_output:,} | {total:,} |"
+        f"| **合計** | | | {total_input:,} | {total_cached:,} | {overall_rate:.1f}% | {total_output:,} | {total:,} |"
     )
     lines.append("")
-    return "\n".join(lines), total_input, total_output, total
+    return "\n".join(lines), total_input, total_output, total, total_cached
 
 
 def main():
@@ -133,12 +137,16 @@ def main():
         output += section + "\n"
 
     if len(sections) == 2:
-        _, _, old_in, old_out, old_total = sections[0]
-        _, _, new_in, new_out, new_total = sections[1]
+        _, _, old_in, old_out, old_total, old_cached = sections[0]
+        _, _, new_in, new_out, new_total, new_cached = sections[1]
+        old_rate = old_cached / old_in * 100 if old_in else 0
+        new_rate = new_cached / new_in * 100 if new_in else 0
         output += "## 比較サマリー\n\n"
         output += "| 指標 | 旧辞書 | 新辞書 | 差分 |\n"
         output += "|------|--------|--------|------|\n"
         output += f"| 合計入力Token | {old_in:,} | {new_in:,} | {new_in - old_in:+,} |\n"
+        output += f"| キャッシュToken合計 | {old_cached:,} | {new_cached:,} | {new_cached - old_cached:+,} |\n"
+        output += f"| キャッシュ率 | {old_rate:.1f}% | {new_rate:.1f}% | — |\n"
         output += f"| 合計出力Token | {old_out:,} | {new_out:,} | {new_out - old_out:+,} |\n"
         output += f"| 合計Token | {old_total:,} | {new_total:,} | {new_total - old_total:+,} |\n"
 
