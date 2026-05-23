@@ -1,7 +1,7 @@
 # フェーズ2 翻訳結果比較
 
 **実施日:** 2026-05-13  
-**元データ:** `plans/experiment_result_run1.md` / `plans/experiment_result_run2.md`
+**元データ:** `experiment/phase2/result_run1.md` / `experiment/phase2/result_run2.md`
 
 ---
 

@@ -3,7 +3,7 @@ import tomli as tomllib
 from pathlib import Path
 from openai import OpenAI
 
-BASE_DIR = Path(__file__).parent.parent
+BASE_DIR = Path(__file__).parent.parent.parent
 _secrets_path = BASE_DIR / ".streamlit" / "secrets.toml"
 if not _secrets_path.exists():
     print(f"エラー: {_secrets_path} が見つかりません。")
@@ -11,10 +11,10 @@ if not _secrets_path.exists():
 with open(_secrets_path, "rb") as _f:
     _secrets = tomllib.load(_f)
 
-PHRASES_FILE = BASE_DIR / "plans" / "experiment_phrases.txt"
+PHRASES_FILE = BASE_DIR / "experiment" / "phase2" / "phrases.txt"
 OLD_DICT_FILE = BASE_DIR / "dialect_dict_old.txt"
 NEW_DICT_FILE = BASE_DIR / "dialect_dict.txt"
-RESULT_FILE = BASE_DIR / "plans" / "experiment_result.md"
+RESULT_FILE = BASE_DIR / "experiment" / "phase2" / "result.md"
 
 MODEL = "gpt-5.4-mini"
 

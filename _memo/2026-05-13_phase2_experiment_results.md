@@ -169,9 +169,9 @@
 
 | ファイル | 説明 |
 |----------|------|
-| `plans/experiment_result_run1.md` | Run1 詳細結果 |
-| `plans/experiment_result_run2.md` | Run2 詳細結果 |
-| `experiment/experiment.py` | 実験スクリプト |
+| `experiment/phase2/result_run1.md` | Run1 詳細結果 |
+| `experiment/phase2/result_run2.md` | Run2 詳細結果 |
+| `experiment/phase2/experiment.py` | 実験スクリプト |
 | `dialect_dict.txt` | 新辞書（フェーズ2書き直し済み） |
 | `dialect_dict_old.txt` | 旧辞書バックアップ |
 | `plans/improvement_plan.md` | 全体改修プラン |
