@@ -200,10 +200,10 @@ with st.sidebar:
 ### ファイル構成
 
 ```
-plans/
-  experiment_phrases.txt    # テスト用標準語フレーズリスト（手動で用意）
-  experiment_result.md      # 実験結果（スクリプト実行後に自動生成）
-experiment.py               # 比較実験スクリプト
+experiment/phase2/
+  experiment.py             # 比較実験スクリプト
+  phrases.txt               # テスト用標準語フレーズリスト（手動で用意）
+  result.md                 # 実験結果（スクリプト実行後に自動生成）
 dialect_dict_old.txt        # 旧辞書のバックアップ
 ```
 
@@ -222,7 +222,7 @@ dialect_dict_old.txt        # 旧辞書のバックアップ
 
 ### `experiment.py` の動作
 
-1. `experiment_phrases.txt` からフレーズリストを読み込む
+1. `experiment/phase2/phrases.txt` からフレーズリストを読み込む
 2. 旧辞書 / 新辞書をそれぞれ読み込む
 3. 各フレーズをResponses APIで翻訳（独立リクエスト・`previous_response_id` なし）
 4. `response.usage` からトークン数を取得:
@@ -231,7 +231,7 @@ dialect_dict_old.txt        # 旧辞書のバックアップ
    output_tokens = response.usage.output_tokens
    total_tokens  = response.usage.total_tokens
    ```
-5. 結果を `plans/experiment_result.md` に出力
+5. 結果を `experiment/phase2/result.md` に出力
 
 ### 出力形式
 
@@ -265,14 +265,19 @@ dialect_dict_old.txt        # 旧辞書のバックアップ
 
 ### フェーズ1: 実験準備（辞書変更前）
 1. `requirements.txt` を更新（`openai>=1.66.0`）
-2. `plans/experiment_phrases.txt` にテスト用フレーズを記入
-3. `experiment.py` を作成（Responses API使用・トークン数取得込み）
-4. **旧辞書のまま**実験を実行 → `plans/experiment_result.md` に旧辞書の結果を保存
+2. `experiment/phase2/phrases.txt` にテスト用フレーズを記入
+3. `experiment/phase2/experiment.py` を作成（Responses API使用・トークン数取得込み）
+4. **旧辞書のまま**実験を実行 → `experiment/phase2/result.md` に旧辞書の結果を保存
 
 ### フェーズ2: 辞書の書き直し・実験
 5. `dialect_dict.txt` を `dialect_dict_old.txt` としてバックアップ
 6. `dialect_dict.txt` を新書式に書き直す
-7. 実験スクリプトを再実行 → `plans/experiment_result.md` に新辞書の結果を追記・比較評価
+7. 実験スクリプトを再実行 → `experiment/phase2/result.md` に新辞書の結果を追記・比較評価
+
+### フェーズ2.5: 方言回答方式の比較実験
+8. `experiment/phase25/phrases.txt` にテスト用フレーズを記入（ユーザーが作成）
+9. `experiment/phase25/experiment_phase25.py` を作成（2パターンを同一フレーズで比較）
+10. 実験を複数回実行し、結果を `experiment/phase25/result_run{n}.md` に保存
 
 ### フェーズ3: アプリ改修
 8. `app.py` のAPIをResponses APIに変更（`client.responses.create`）
@@ -284,10 +289,67 @@ dialect_dict_old.txt        # 旧辞書のバックアップ
 
 ---
 
+## 変更7: 方言回答方式の比較実験（フェーズ2.5）
+
+**目的:** 方言精度を最大化するために、1ステップ回答と2ステップ回答のどちらが優れているかを定量比較する
+
+### 比較パターン
+
+| パターン | フロー | 概要 |
+|----------|--------|------|
+| A（直接） | 標準語の質問 → 方言の回答 | 1回のAPIリクエストで方言回答を生成 |
+| B（2段階） | 標準語の質問 → 標準語の回答 → 方言の回答 | まず標準語で回答し、次のリクエストで方言に変換 |
+
+### ファイル構成
+
+```
+experiment/phase25/
+  experiment_phase25.py       # 比較実験スクリプト
+  phrases.txt                 # テスト用フレーズリスト（ユーザーが作成）
+  result_run1.md              # 実験結果 Run1
+  result_run2.md              # 実験結果 Run2
+```
+
+### `experiment_phase25.py` の動作
+
+1. `experiment/phase25/phrases.txt` からフレーズリストを読み込む
+2. 各フレーズに対して2パターンでAPIリクエストを実行:
+   - **パターンA:** `instructions`（辞書付き）+ `input`（標準語質問）→ 方言回答を1回で生成
+   - **パターンB:** 1回目リクエストで標準語回答を生成 → 2回目リクエストで方言に変換
+3. `response.usage` からトークン数を取得
+4. 結果を `experiment/phase25/result_run{n}.md` に出力
+
+### 出力形式
+
+```markdown
+## パターンA: 標準語質問 → 方言回答（直接）
+
+| # | 標準語の質問 | 方言の回答 | 入力Token | 出力Token | 合計Token |
+|---|------------|------------|-----------|-----------|-----------|
+| 1 | 今日はどうでしたか？ | 今日はどうだったかね？ | 350 | 20 | 370 |
+| **合計** | | | 3,500 | 200 | 3,700 |
+
+## パターンB: 標準語質問 → 標準語回答 → 方言回答（2段階）
+
+| # | 標準語の質問 | 標準語の回答 | 方言の回答 | 入力Token | 出力Token | 合計Token |
+|---|------------|------------|------------|-----------|-----------|-----------|
+| 1 | 今日はどうでしたか？ | 今日はどうでしたか？（標準語） | 今日はどうだったかね？ | 400 | 40 | 440 |
+| **合計** | | | | 4,000 | 400 | 4,400 |
+
+## 比較サマリー
+
+| 指標 | パターンA（直接） | パターンB（2段階） | 差分 |
+|------|------------------|-------------------|------|
+| 合計Token | 3,700 | 4,400 | +700 |
+| 方言精度（主観評価） | — | — | — |
+```
+
+---
+
 ## 検証方法
 
-1. `python experiment.py` で実験スクリプトが正常に動作することを確認
-2. `plans/experiment_result.md` に旧辞書・新辞書のトークン数が記録されることを確認
+1. `python experiment/phase2/experiment.py` で実験スクリプトが正常に動作することを確認
+2. `experiment/phase2/result.md` に旧辞書・新辞書のトークン数が記録されることを確認
 3. `streamlit run app.py` で起動
 4. チャットモード: 方言での会話が正しく動作することを確認
 5. チャットモード: 10回上限・30文字制限が機能することを確認
