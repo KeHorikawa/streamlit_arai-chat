@@ -6,7 +6,7 @@ client = OpenAI(api_key=openai_api_key)
 
 MODEL = "gpt-5.4-mini"
 MAX_TURNS = 10
-MAX_INPUT_CHARS = 30
+MAX_INPUT_CHARS = 50
 
 with open("dialect_dict.txt", encoding="utf-8") as f:
     dialect_dict = f.read()
