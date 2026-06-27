@@ -19,3 +19,8 @@ dict = "variants/dicts/dict_v1_baseline.txt"
 name = "v2_sentence_end"
 prompt = "variants/prompts/chat_v2_sentence_end.txt"
 dict = "variants/dicts/dict_v2_sentence_end.txt"
+
+[[arms]]
+name = "v3_balanced"
+prompt = "variants/prompts/chat_v3_balanced.txt"
+dict = "variants/dicts/dict_v3_balanced.txt"
