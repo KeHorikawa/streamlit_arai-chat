@@ -59,13 +59,30 @@ streamlit run app.py
 ```
 .
 ├── app.py                  # アプリ本体（チャット／翻訳の2モード）
-├── dialect_dict.txt        # 妙高弁辞書（語彙・表現・文法ルール）
+├── dialect_dict.txt        # 妙高弁辞書（語彙・表現・文法ルール・文末表現）
 ├── requirements.txt        # 依存パッケージ
 ├── .streamlit/
 │   └── secrets.toml.example # APIキー設定のテンプレート
 ├── experiment/             # 方言生成の検証用スクリプト・結果
+│   └── prompt_dict_lab/    # プロンプト・辞書 改善実験ハーネス（汎用）
+├── plans/                  # 改修・実験の計画ドキュメント
 └── _memo/                  # 開発メモ・実験記録
 ```
+
+## プロンプト・辞書 改善実験（experiment/prompt_dict_lab）
+
+辞書（`dialect_dict.txt`）とチャット用プロンプトの改善を、**新旧を入れ替えながら定量・定性比較**するための汎用実験ディレクトリを用意しています。今回限りでなく、今後のプロンプト・辞書改善でも同じ仕組みで繰り返し使えます。
+
+- プロンプト・辞書・テスト用フレーズを `variants/`・`phrases/` 配下のテキストファイルとして外部化。
+- `config.toml` で「アーム（プロンプト × 辞書の組み合わせ）」を宣言し、同一フレーズに流して横並び比較。
+- 結果は `results/` に保存され、出力の横並び（定性評価）とトークン消費（定量）の両方が残ります。
+- コード本体（`run_experiment.py`）を変更せず、設定とテキストの追加だけで新しい実験を足せます。
+
+```bash
+python experiment/prompt_dict_lab/run_experiment.py
+```
+
+詳しい使い方・拡張手順は [`experiment/prompt_dict_lab/README.md`](experiment/prompt_dict_lab/README.md) を参照してください。
 
 ## デプロイ
 
