@@ -1,0 +1,26 @@
+# プロンプト・辞書 改善実験の設定
+#
+# パスはすべて experiment/prompt_dict_lab/ からの相対パス。
+# 新しい実験をするときは、このファイルを編集するか --config で別ファイルを指定する。
+# プロンプト内の {dict_content} に、各アームの dict が差し込まれる。
+
+title = "dialect_sentence_end"
+model = "gpt-5.4-mini"
+max_output_tokens = 300
+phrases = "phrases/dialect_naturalness.txt"
+
+# アーム = プロンプト × 辞書 の組み合わせ。2つ以上で横並び比較になる。
+[[arms]]
+name = "baseline"
+prompt = "variants/prompts/chat_v1_baseline.txt"
+dict = "variants/dicts/dict_v1_baseline.txt"
+
+[[arms]]
+name = "v2_sentence_end"
+prompt = "variants/prompts/chat_v2_sentence_end.txt"
+dict = "variants/dicts/dict_v2_sentence_end.txt"
+
+[[arms]]
+name = "v3_balanced"
+prompt = "variants/prompts/chat_v3_balanced.txt"
+dict = "variants/dicts/dict_v3_balanced.txt"
