@@ -1,7 +1,7 @@
 """プロンプト・辞書 改善実験ハーネス（汎用）
 
 config.toml に定義した「アーム（プロンプト×辞書の組み合わせ）」を
-同じフレーズ集に対して実行し、出力と消費トークンを横並びで比較する。
+同じフレーズ集に対して実行し、各アームの出力（段落）と消費トークン（表）を比較する。
 
 使い方:
     python experiment/prompt_dict_lab/run_experiment.py
@@ -106,35 +106,43 @@ def totals(results):
     return t_in, t_out, t_total, t_cached
 
 
-def format_arm_table(arm_name, results):
-    lines = [f"### アーム: {arm_name}", ""]
-    lines.append("| # | 入力（標準語） | 出力（方言） | 入力Tok | キャッシュ | 出力Tok | 合計Tok |")
-    lines.append("|---|----------------|--------------|---------|-----------|---------|---------|")
-    for i, r in enumerate(results, 1):
-        lines.append(
-            f"| {i} | {r['phrase']} | {r['output']} "
-            f"| {r['input_tokens']} | {r['cached_tokens']} | {r['output_tokens']} | {r['total_tokens']} |"
-        )
-    t_in, t_out, t_total, t_cached = totals(results)
-    lines.append(f"| **合計** | | | {t_in:,} | {t_cached:,} | {t_out:,} | {t_total:,} |")
-    lines.append("")
+def format_qualitative(arm_names, all_results, phrases):
+    """フレーズごとに各アームの出力を段落で並べた定性比較。
+
+    チャット回答は改行や箇条書きを含むため、表ではなく見出し＋段落で書く
+    （どのビューアでも崩れない）。
+    """
+    lines = []
+    for i, phrase in enumerate(phrases):
+        lines.append(f"#### {i + 1}. {phrase}")
+        lines.append("")
+        for name, results in zip(arm_names, all_results):
+            lines.append(f"**{name}**")
+            lines.append("")
+            lines.append(results[i]["output"])
+            lines.append("")
+        lines.append("---")
+        lines.append("")
     return "\n".join(lines)
 
 
-def format_side_by_side(arm_names, all_results, phrases):
-    """同じフレーズに対する各アームの出力を横並びにした定性比較表。"""
-    header = "| # | 入力 | " + " | ".join(arm_names) + " |"
-    sep = "|---|------|" + "|".join(["------"] * len(arm_names)) + "|"
-    lines = ["### 出力の横並び比較（定性評価用）", "", header, sep]
-    for i, phrase in enumerate(phrases):
-        cells = [res[i]["output"] for res in all_results]
-        lines.append(f"| {i + 1} | {phrase} | " + " | ".join(cells) + " |")
+def format_arm_token_table(arm_name, results):
+    """アームごとのフレーズ別トークン内訳（数値のみ）。"""
+    lines = [f"#### {arm_name}", ""]
+    lines.append("| # | 入力Tok | キャッシュ | 出力Tok | 合計Tok |")
+    lines.append("|---|---------|-----------|---------|---------|")
+    for i, r in enumerate(results, 1):
+        lines.append(
+            f"| {i} | {r['input_tokens']} | {r['cached_tokens']} | {r['output_tokens']} | {r['total_tokens']} |"
+        )
+    t_in, t_out, t_total, t_cached = totals(results)
+    lines.append(f"| **合計** | {t_in:,} | {t_cached:,} | {t_out:,} | {t_total:,} |")
     lines.append("")
     return "\n".join(lines)
 
 
 def format_token_summary(arm_names, all_results):
-    lines = ["### トークン比較サマリー", ""]
+    lines = ["### アーム合計", ""]
     lines.append("| アーム | 入力Tok | キャッシュ | キャッシュ率 | 出力Tok | 合計Tok |")
     lines.append("|--------|---------|-----------|------------|---------|---------|")
     for name, results in zip(arm_names, all_results):
@@ -191,14 +199,16 @@ def main():
     for arm in arms:
         output.append(f"- アーム `{arm['name']}`: prompt=`{arm['prompt']}` / dict=`{arm.get('dict', '—')}`")
     output.append("")
-    output.append("## 出力比較")
+    output.append("## 出力比較（定性評価）")
     output.append("")
-    output.append(format_side_by_side(arm_names, all_results, phrases))
+    output.append(format_qualitative(arm_names, all_results, phrases))
+    output.append("## トークン比較")
+    output.append("")
     output.append(format_token_summary(arm_names, all_results))
-    output.append("## アーム別詳細")
+    output.append("### フレーズ別トークン内訳")
     output.append("")
     for name, results in zip(arm_names, all_results):
-        output.append(format_arm_table(name, results))
+        output.append(format_arm_token_table(name, results))
 
     result_file = resolve_result_file(title)
     result_file.write_text("\n".join(output), encoding="utf-8")
